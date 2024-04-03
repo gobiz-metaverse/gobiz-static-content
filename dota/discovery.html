@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <title>Cho mèo con check version</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f0f0f0;
+        margin: 0;
+        padding: 0;
+      }
+
+      .container {
+        max-width: 80vw;
+        margin: 50px auto;
+        padding: 20px;
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        color: #333;
+        text-align: center;
+      }
+
+      .api-cards {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 12px;
+      }
+
+      .api-card {
+        width: calc(50% - 50px);
+        margin-bottom: 20px;
+        padding: 20px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+      }
+
+      p {
+        color: #555;
+        margin: 10px 0;
+      }
+
+      .highlight {
+        color: #ff6b6b;
+        font-weight: bold;
+      }
+
+      .loading {
+        display: none;
+        margin-top: 20px;
+        text-align: center;
+      }
+
+      .loading img {
+        width: 200px;
+        height: 200px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Cho mèo con check version</h1>
+      <div class="loading" id="loading">
+        <img
+          src="https://gobiz-kunlun-staging.s3.ap-southeast-1.amazonaws.com/baogam/customer-order/BG0YSNN/CTS9B4MF-707-gif.gif"
+          alt="Loading..."
+        />
+      </div>
+      <div class="api-cards" id="api-data"></div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        let apiUrls = [
+          {
+            name: "Neptune (m2)",
+            url: "https://ongvang.admin.gobizdev.com/actuator/info",
+          },
+          {
+            name: "Wisp",
+            url: "https://api-dev.dota-pilot.gobizdev.com/actuator/info",
+          },
+          {
+            name: "Chen",
+            url: "https://chen.dota-pilot.gobizdev.com/actuator/info",
+          },
+          {
+            name: "Ancient",
+            url: "https://ancient.dota-pilot.gobizdev.com/actuator/info",
+          },
+        ];
+
+        document.getElementById("loading").style.display = "block";
+
+        let apiDataArray = [];
+
+        Promise.all(
+          apiUrls.map((obj) =>
+            fetch(obj.url)
+              .then((response) => {
+                if (!response.ok) {
+                  throw new Error("Server is down");
+                }
+                return response.json();
+              })
+              .then((data) => ({ ...data, error: false, apiUrl: obj.url }))
+              .catch((error) => {
+                console.error("Error fetching data:", error);
+                return { error: true, apiUrl: obj.name };
+              })
+          )
+        ).then((data) => {
+          apiDataArray = data;
+          setTimeout(() => {
+            document.getElementById("loading").style.display = "none";
+            displayApiData();
+          }, 1000);
+        });
+
+        function convertToVietnamTimeAndFormat(utcTime) {
+          return moment
+            .utc(utcTime)
+            .add(7, "hours")
+            .format("HH:mm:ss DD/MM/YYYY");
+        }
+
+        function displayApiData() {
+          let container = document.getElementById("api-data");
+
+          container.innerHTML = "";
+
+          apiDataArray.forEach((apiData, index) => {
+            if (!apiData) {
+              console.error("API data is null:", index + 1);
+              return;
+            }
+
+            let card = document.createElement("div");
+            card.classList.add("api-card");
+
+            if (apiData.error) {
+              card.innerHTML = `
+                <h2 style="white-space:nowrap">Service name: ${apiData.apiUrl}</h2>
+                <p><span class="highlight">Error:</span> Server is down</p>
+            `;
+            } else {
+              card.innerHTML = `
+                <h2> Service name: ${apiUrls[index].name}</h2>
+                <p><span class="highlight">Commit hash:</span> ${
+                  apiData?.git?.commit?.id?.abbrev || "---"
+                }</p>
+                <p><span class="highlight">Version bản build:</span> ${
+                  apiData?.git?.commit?.build?.version || "---"
+                }</p>
+                <p><span class="highlight">Tag number:</span> ${
+                  apiData?.git?.tags || "---"
+                }</p>
+
+                <p><span class="highlight">Thời gian build:</span> ${
+                  convertToVietnamTimeAndFormat(apiData?.build?.time) || "---"
+                }</p>
+                <p><span class="highlight">Version bản build:</span> ${
+                  apiData?.build?.version || "---"
+                }</p>
+            `;
+            }
+            container.appendChild(card);
+          });
+        }
+      });
+    </script>
+  </body>
+</html>
