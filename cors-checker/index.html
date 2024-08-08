@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CORS Checker with XMLHttpRequest</title>
+    <style>
+        input, button { margin: 10px; padding: 8px; }
+        p { margin-left: 10px; }
+    </style>
+</head>
+<body>
+    <h1>CORS Checker</h1>
+    <input type="text" id="urlInput" placeholder="Enter URL to check" style="width: 300px;">
+    <button id="checkButton">Check CORS</button>
+    <p id="result">Results will appear here.</p>
+
+    <script>
+        function checkCORS(url) {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', url, true);
+
+            xhr.onload = function() {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    document.getElementById('result').textContent = 'CORS is enabled. Response status: ' + xhr.status;
+                } else {
+                    document.getElementById('result').textContent = 'CORS check failed with status: ' + xhr.status + ' and response: ' + xhr.responseText;
+                }
+            };
+
+            xhr.onerror = function() {
+                document.getElementById('result').textContent = 'CORS check failed. Error occurred during the request.';
+            };
+
+            xhr.send();
+        }
+
+        document.getElementById('checkButton').addEventListener('click', function() {
+            var url = document.getElementById('urlInput').value;
+            if (url) {
+                document.getElementById('result').textContent = 'Checking CORS...';
+                checkCORS(url);
+            } else {
+                document.getElementById('result').textContent = 'Please enter a URL.';
+            }
+        });
+    </script>
+</body>
+</html>
