@@ -27,6 +27,7 @@ VALUES ('b273ecdb-7df7-44c8-8985-ee18bce90643', 'thanhtoanviettrung', 'thanhtoan
 
 ```sql
 select gobiz_seed_data('b273ecdb-7df7-44c8-8985-ee18bce90643','ducmami')
+(*** đoạn này thiếu, cần chạy ensure_tenant_correct và pd_financial nữa)
 ```
 
 * Thêm pd_tenant_mapping:
